@@ -24,22 +24,15 @@
 */
 /**************************************************************************/
 
-#ifndef Adafruit_ADXL345_h
-#define Adafruit_ADXL345_h
-
-#if ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
+#ifndef STM32Lxx_ADXL345_h
+#define STM32Lxx_ADXL345_h
 
 #include <Adafruit_Sensor.h>
-#include <Wire.h>
 
 /*=========================================================================
     I2C ADDRESS/BITS
     -----------------------------------------------------------------------*/
-#define ADXL345_DEFAULT_ADDRESS (0x53) ///< Assumes ALT address pin low
+#define ADXL345_DEFAULT_ADDRESS (0xA6) ///< Assumes ALT address pin grouded
 /*=========================================================================*/
 
 /*=========================================================================
@@ -89,23 +82,22 @@
 
 */
 typedef enum {
-  ADXL345_DATARATE_3200_HZ = 0b1111, ///< 1600Hz Bandwidth   140�A IDD
-  ADXL345_DATARATE_1600_HZ = 0b1110, ///<  800Hz Bandwidth    90�A IDD
-  ADXL345_DATARATE_800_HZ = 0b1101,  ///<  400Hz Bandwidth   140�A IDD
-  ADXL345_DATARATE_400_HZ = 0b1100,  ///<  200Hz Bandwidth   140�A IDD
-  ADXL345_DATARATE_200_HZ = 0b1011,  ///<  100Hz Bandwidth   140�A IDD
-  ADXL345_DATARATE_100_HZ = 0b1010,  ///<   50Hz Bandwidth   140�A IDD
-  ADXL345_DATARATE_50_HZ = 0b1001,   ///<   25Hz Bandwidth    90�A IDD
-  ADXL345_DATARATE_25_HZ = 0b1000,   ///< 12.5Hz Bandwidth    60�A IDD
-  ADXL345_DATARATE_12_5_HZ = 0b0111, ///< 6.25Hz Bandwidth    50�A IDD
-  ADXL345_DATARATE_6_25HZ = 0b0110,  ///< 3.13Hz Bandwidth    45�A IDD
-  ADXL345_DATARATE_3_13_HZ = 0b0101, ///< 1.56Hz Bandwidth    40�A IDD
-  ADXL345_DATARATE_1_56_HZ = 0b0100, ///< 0.78Hz Bandwidth    34�A IDD
-  ADXL345_DATARATE_0_78_HZ = 0b0011, ///< 0.39Hz Bandwidth    23�A IDD
-  ADXL345_DATARATE_0_39_HZ = 0b0010, ///< 0.20Hz Bandwidth    23�A IDD
-  ADXL345_DATARATE_0_20_HZ = 0b0001, ///< 0.10Hz Bandwidth    23�A IDD
-  ADXL345_DATARATE_0_10_HZ =
-      0b0000 ///< 0.05Hz Bandwidth    23�A IDD (default value)
+  ADXL345_DATARATE_3200_HZ = 0x0F, //< 1600Hz Bandwidth   140?A IDD
+  ADXL345_DATARATE_1600_HZ = 0x0E, //<  800Hz Bandwidth    90?A IDD
+  ADXL345_DATARATE_800_HZ  = 0x0D, //<  400Hz Bandwidth   140?A IDD
+  ADXL345_DATARATE_400_HZ  = 0x0C, //<  200Hz Bandwidth   140?A IDD
+  ADXL345_DATARATE_200_HZ  = 0x0B, //<  100Hz Bandwidth   140?A IDD
+  ADXL345_DATARATE_100_HZ  = 0x0A, //<   50Hz Bandwidth   140?A IDD
+  ADXL345_DATARATE_50_HZ   = 0x09, //<   25Hz Bandwidth    90?A IDD
+  ADXL345_DATARATE_25_HZ   = 0x08, //< 12.5Hz Bandwidth    60?A IDD
+  ADXL345_DATARATE_12_5_HZ = 0x07, //< 6.25Hz Bandwidth    50?A IDD
+  ADXL345_DATARATE_6_25HZ  = 0x06, //< 3.13Hz Bandwidth    45?A IDD
+  ADXL345_DATARATE_3_13_HZ = 0x05, //< 1.56Hz Bandwidth    40?A IDD
+  ADXL345_DATARATE_1_56_HZ = 0x04, //< 0.78Hz Bandwidth    34?A IDD
+  ADXL345_DATARATE_0_78_HZ = 0x03, //< 0.39Hz Bandwidth    23?A IDD
+  ADXL345_DATARATE_0_39_HZ = 0x02, //< 0.20Hz Bandwidth    23?A IDD
+  ADXL345_DATARATE_0_20_HZ = 0x01, //< 0.10Hz Bandwidth    23?A IDD
+  ADXL345_DATARATE_0_10_HZ = 0x00  //< 0.05Hz Bandwidth    23?A IDD (default value)
 } dataRate_t;
 
 /**
@@ -120,7 +112,7 @@ typedef enum {
 } range_t;
 
 /**
- * @brief Class to interact with the ADXL345 accelerometer
+ * @brief API to interact with the ADXL345 accelerometer
  *
  */
   Adafruit_ADXL345_Unified(int32_t sensorID = -1);
@@ -152,4 +144,4 @@ typedef enum {
   int8_t _i2caddr;
 };
 
-#endif // Adafruit_ADXL345_h
+#endif // STM32Lxx_ADXL345_h
