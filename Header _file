@@ -1,25 +1,20 @@
 /**************************************************************************/
 /*!
-    @file     Adafruit_ADXL345_U.h
-    @author   K. Townsend (Adafruit Industries)
+    @file     ADXL345_Haeder.h
+    @author   Lucien
 
 
     The ADXL345 is a digital accelerometer with 13-bit resolution, capable
-    of measuring up to +/-16g.  This driver communicate using I2C.
+    of measuring up to +/-16g.  This driver communicate using I2C or SPI
 
     This is a library for the Adafruit ADXL345 breakout
     ----> https://www.adafruit.com/products/1231
-
-    Adafruit invests time and resources providing this open source code,
-    please support Adafruit and open-source hardware by purchasing
-    products from Adafruit!
 
     @section license License
     BSD (see license.txt)
 
     @section  HISTORY
 
-    v1.1 - Added Adafruit_Sensor library support
     v1.0 - First release
 */
 /**************************************************************************/
@@ -27,7 +22,6 @@
 #ifndef STM32Lxx_ADXL345_h
 #define STM32Lxx_ADXL345_h
 
-#include <Adafruit_Sensor.h>
 
 /*=========================================================================
     I2C ADDRESS/BITS
@@ -115,9 +109,9 @@ typedef enum {
  * @brief API to interact with the ADXL345 accelerometer
  *
  */
-  Adafruit_ADXL345_Unified(int32_t sensorID = -1);
-  Adafruit_ADXL345_Unified(uint8_t clock, uint8_t miso, uint8_t mosi,
-                           uint8_t cs, int32_t sensorID = -1);
+//  Adafruit_ADXL345_Unified(int32_t sensorID = -1);
+//  Adafruit_ADXL345_Unified(uint8_t clock, uint8_t miso, uint8_t mosi,
+//                           uint8_t cs, int32_t sensorID = -1);
 
   bool begin(uint8_t addr = ADXL345_DEFAULT_ADDRESS);
   void setRange(range_t range);
