@@ -65,17 +65,17 @@
 #define ADXL345_REG_FIFO_STATUS			(0x39)  // FIFO status
 /*=========================================================================*/
 
-/*=========================================================================
-    REGISTERS
-    -----------------------------------------------------------------------*/
+/*========================== DEFINE =======================================*/
+/**
+ * @brief 
+*/
 #define ADXL345_MG2G_MULTIPLIER (0.004) // 4mg per lsb
-/*=========================================================================*/
 
 /**
  * @brief Device name
 */
 #define DEV_NAME "ADXL345"
-
+/*============================= TYPEDEF ===================================*/
 /**
  * @brief Used with register 0x2C (ADXL345_REG_BW_RATE) to set bandwidth
 */
@@ -104,6 +104,15 @@ typedef enum {
   */
 typedef HAL_StatusTypeDef ADXL345_StatusTypeDef;
 /**
+ * @brief  Used when register must be set
+ *
+ */
+typedef enum {
+  X_AXIS = 0x00, 
+  Y_AXIS = 0x01,
+  Z_AXIS = 0x02
+} three_axis;
+/**
  * @brief  Used with register 0x31 (ADXL345_REG_DATA_FORMAT) to set g range
  *
  */
@@ -113,6 +122,13 @@ typedef enum {
   ADXL345_RANGE_4_G  = 0x01, // +/- 4g
   ADXL345_RANGE_2_G  = 0x00  // +/- 2g (default value)
 } range_t;
+/**
+ * @brief  Used to set up resolution
+ */
+typedef enum {
+  FULL = 1,
+  DEFAULT = 0
+} resolution;
 /**
  * @brief  write_i2c to the device
  * @param  Sensor address, register address to write_i2c, value to be written
@@ -138,54 +154,26 @@ typedef struct {
 	char sensor_name[8]; // name : ADXL345
 	uint8_t dev_id;			 // sensor id
 	range_t dev_range;   // current range
+	resolution full_res;		 // When this bit is set to a value of 1, the device
+											 // is in full resolution mode
+	// user redefine functions ( according MCU used )
 	ADXL345_write write_device; // write i2c or SPI
-	ADXL345_read read_device;	  // wread i2c or SPI
-	ADXL345_delay ms_delay; // redefine delai of MCU
-}
-ADXL345_sensor;
-/**
- * @brief  main items of the device used to tilt/inclination calculation
- * filled with register 0x32 to 0x36 (X, Y, Z axis) and calculated
- *
- */
-typedef struct {
+	ADXL345_read read_device;	  // read i2c or SPI
+	ADXL345_delay ms_delay; 		// redefine delay
+  /* main items of the device used to tilt/inclination calculation
+	   filled with register 0x32 to 0x36 (X, Y, Z axis) and calculated */
 	int x_value; // x-axis is proportional to the sine of the angle of inclination
 	int y_value; // y-axis acceleration, due to the orthogonality, is proportional
-							 //to the cosine of the angle of inclination
-	int z_value;
+							 // to the cosine of the angle of inclination
+	int z_value; // z axis
 	float teta1; // sin-1( x ) in radians
 	float teta2; // ratio tan-1( x/y ) in radians
 	float teta3; // ratio tan-1( x/y ) in radians
 	float phi3;  // ratio cos-1( z / RSS(x2 + y2 + z2))
 }
-ADXL345_data;
-/**
- * @brief  All R/W prameter registers are named here
- *
- */
-typedef struct { // compound all the main items of the device
-	int Tap_threshold;
-	int X_axis_offset;
-	int Y_axis_offset;
-	int Z_axis_offset;
-	int tap_duration;
-	int tap_atency;
-	int tap_window;
-	int thresh_act;
-	int thresh_inact;
-	int time_inact;
-	int act_inact_ctl;
-	int Free_fall_threshold;
-	int tap_axex;
-	int DR_PWM_control;
-	int power_saving_ctl;
-	int int_enable;
-	int int_map;
-	int data_format;
-	int fifo_ctl;
-}
-ADXL345_feature;
+ADXL345_sensor;
 
+ /*============================ API ========================================*/
 /**
  * @brief API to interact with the ADXL345 accelerometer
  *
@@ -193,11 +181,11 @@ ADXL345_feature;
 /**
 * @brief caculate the angle on one axis : Typically to check horizontality, motionless.
 *			   To notice :
-*					- the calculated angle of inclination is accurate only when the
-*        device is oriented such that the x-axis is always in the plane of gravity
-*				  - Linear approximation for inclination angle between -30 and +30° is possible with
-*				 a good sensibility (teta = x/126 rd)
-* 			  - No ability to distinguish angles of inclination in a complete 360° arc
+*					 - the calculated angle of inclination is accurate only when the
+*         device is oriented such that the x-axis is always in the plane of gravity
+*				   - Linear approximation for inclination angle between -30 and +30° is possible with
+*				  a good sensibility (teta = x/126 rd)
+* 			   - No ability to distinguish angles of inclination in a complete 360° arc
  */
 void inclination_calculation_1axis(void);
 /**
@@ -214,15 +202,30 @@ void inclination_calculation_2axis(void);
  */
 void inclination_calculation_3axis(void);
 /**
-* @brief set range from +-2g ... +-16g
+* @brief set offset according the precision from +-2g to +-16g
+ *
+ */
+void setOffset(ADXL345_sensor sensor, int8_t offset, three_axis axis);
+/**
+	* @brief set rsolution
+  *
+ */
+void set_resolution(ADXL345_sensor *sensor, resolution resol);
+/**
+	* @brief get rsolution
+  *
+ */
+resolution get_resolution(ADXL345_sensor *sensor);
+/**
+* @brief set range from +-2g to +-16g
  *
  */
 void setRange(range_t range);
 /**
-* @brief Get range
+* @brief Get range (give true value only if  setrange have been used before calling)
  *
  */
-range_t getRange(void);
+range_t getRange(ADXL345_sensor *ps);
 
 void setDataRate(dataRate_t dataRate);
 
@@ -241,3 +244,9 @@ void  getDeviceID(ADXL345_sensor *pa);
 //  int16_t getX(void), getY(void), getZ(void);
 
 #endif // STM32Lxx_ADXL345_h
+/**
+* @brief Get X, Y, Z
+ *
+ */
+void Accel_LectureXYZ (ADXL345_sensor *sensor);
+
