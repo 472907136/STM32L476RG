@@ -1,37 +1,31 @@
-/**************************************************************************/
 /*!
     @file     ADXL345_Haeder.h
     @author   Lucien
 
-
-    The ADXL345 is a digital accelerometer with 13-bit resolution, capable
-    of measuring up to +/-16g.  This driver communicate using I2C or SPI
-
-    This is a library for the Adafruit ADXL345 breakout
-    ----> https://www.adafruit.com/products/1231
+		@note     The ADXL345 is a digital accelerometer with 13-bit resolution, capable
+							of measuring up to +/-16g.  This driver communicate using I2C or SPI
 
     @section license License
-    BSD (see license.txt)
-
+						 BSD (see license.txt)
+						 
     @section  HISTORY
 
     v1.0 - First release
 */
-/**************************************************************************/
-#include <stm32l4xx.h> // contains types
 
 #ifndef STM32Lxx_ADXL345_h
 #define STM32Lxx_ADXL345_h
 
+#include <stm32l4xx.h> // contains types useful for these MCU series
 
-/*=========================================================================
-    I2C ADDRESS/BITS
+/* =========================================================================
+    I2C ADDRESS
     -----------------------------------------------------------------------*/
 #define ADXL345_ADDRESS (0xA6) // Assumes ALT address pin grouded
-/*=========================================================================*/
+/* =========================================================================*/
 
-/*=========================================================================
-    REGISTERS
+/* =========================================================================
+    ADXL345 REGISTERS
     -----------------------------------------------------------------------*/
 #define ADXL345_REG_DEVID 					(0x00)  // Device ID
 #define ADXL345_REG_THRESH_TAP			(0x1D)  // Tap threshold
@@ -63,20 +57,22 @@
 #define ADXL345_REG_DATAZ1					(0x37)  // Z-axis data 1
 #define ADXL345_REG_FIFO_CTL				(0x38)  // FIFO control
 #define ADXL345_REG_FIFO_STATUS			(0x39)  // FIFO status
-/*=========================================================================*/
+/* =========================================================================*/
 
-/*========================== DEFINE =======================================*/
-/**
+/* ========================== DEFINE =======================================*/
+/*!
  * @brief 
 */
 #define ADXL345_MG2G_MULTIPLIER (0.004) // 4mg per lsb
 
-/**
+/*!
  * @brief Device name
 */
 #define DEV_NAME "ADXL345"
+/* =========================================================================*/
+
 /*============================= TYPEDEF ===================================*/
-/**
+/*!
  * @brief Used with register 0x2C (ADXL345_REG_BW_RATE) to set bandwidth
 */
 typedef enum {
@@ -98,12 +94,12 @@ typedef enum {
   ADXL345_DATARATE_0_10_HZ = 0x00  // 0.05Hz Bandwidth    23?A IDD (default value)
 } dataRate_t;
 
-/**
-  * @brief  ADXL345 Status enum definition (is used as HAL_StatusTypeDef)
-  * HAL_OK = 0x00, HAL_ERROR = 0x01, HAL_BUSY = 0x02, HAL_TIMEOUT = 0x03
+/*!
+  * @brief  ADXL345 Status definition (used instead of HAL_StatusTypeDef)
+  * 				HAL_OK = 0x00, HAL_ERROR = 0x01, HAL_BUSY = 0x02, HAL_TIMEOUT = 0x03
   */
 typedef HAL_StatusTypeDef ADXL345_StatusTypeDef;
-/**
+/*!
  * @brief  Used when register must be set
  *
  */
@@ -112,75 +108,74 @@ typedef enum {
   Y_AXIS = 0x01,
   Z_AXIS = 0x02
 } three_axis;
-/**
+/*!
  * @brief  Used with register 0x31 (ADXL345_REG_DATA_FORMAT) to set g range
  *
  */
 typedef enum {
-  ADXL345_RANGE_16_G = 0x03, // +/- 16g
-  ADXL345_RANGE_8_G  = 0x02, // +/- 8g
-  ADXL345_RANGE_4_G  = 0x01, // +/- 4g
-  ADXL345_RANGE_2_G  = 0x00  // +/- 2g (default value)
+  ADXL345_RANGE_16_G = 0x03, /*!< +/- 16g. */ 
+  ADXL345_RANGE_8_G  = 0x02, /*!< +/- 8g. */ 
+  ADXL345_RANGE_4_G  = 0x01, /*!< +/- 4g. */ 
+  ADXL345_RANGE_2_G  = 0x00  /*!< +/- 2g (default value) */
 } range_t;
-/**
+/*!
  * @brief  Used to set up resolution
  */
 typedef enum {
   FULL = 1,
   DEFAULT = 0
 } resolution;
-/**
+/*!
  * @brief  write_i2c to the device
  * @param  Sensor address, register address to write_i2c, value to be written
  * @return true: success false: write_i2c failed
  */
 typedef ADXL345_StatusTypeDef (*ADXL345_write)(uint8_t sensor_address, int8_t reg_address, int8_t val);
-/**
- * @brief Read from the device
- * @param register address to read, pointer to stored data
- * @return true: success false: read failed
+/*!
+ * @brief  Read from the device
+ * @param  Register address to read, pointer to stored data
+ * @return True: success, false: read failed
  */
 typedef ADXL345_StatusTypeDef (*ADXL345_read)(uint8_t sensor_address, uint8_t reg_address, uint8_t *data, uint8_t len);
-/**
+/*!
  * @brief Make a delay in ms
  * @param value in ms
  */
 typedef void (*ADXL345_delay)(uint32_t _delay);
-/**
-* @brief  sensor description and use
+/*!
+ * @brief  sensor features
  *
  */
 typedef struct {
-	char sensor_name[8]; // name : ADXL345
-	uint8_t dev_id;			 // sensor id
-	range_t dev_range;   // current range
-	resolution full_res;		 // When this bit is set to a value of 1, the device
-											 // is in full resolution mode
-	// user redefine functions ( according MCU used )
-	ADXL345_write write_device; // write i2c or SPI
-	ADXL345_read read_device;	  // read i2c or SPI
-	ADXL345_delay ms_delay; 		// redefine delay
+	char sensor_name[8]; /*!<Contains the name : ADXL345. */
+	uint8_t dev_id;			 /*!<Contains sensor id. */
+	range_t dev_range;   /*!<Contains current range. */
+	resolution full_res; /*!<When this bit is set 1, the device iss in full resolution mode. */
+	/// user redefine functions ( according MCU used )
+	ADXL345_write write_device; /*!<Write i2c or SPI. */
+	ADXL345_read read_device;	  /*!<Read i2c or SPI. */
+	ADXL345_delay ms_delay; 		/*!<Define delay. */
   /* main items of the device used to tilt/inclination calculation
 	   filled with register 0x32 to 0x36 (X, Y, Z axis) and calculated */
-	int x_value; // x-axis is proportional to the sine of the angle of inclination
-	int y_value; // y-axis acceleration, due to the orthogonality, is proportional
+	int16_t x_value; /*!<x-axis is 10 to 13 bits (proportionnal to sine of inclination). */
+	int16_t y_value; // y-axis acceleration, due to the orthogonality, is proportional
 							 // to the cosine of the angle of inclination
-	int z_value; // z axis
-	float teta1; // sin-1( x ) in radians
-	float teta2; // ratio tan-1( x/y ) in radians
-	float teta3; // ratio tan-1( x/y ) in radians
-	float phi3;  // ratio cos-1( z / RSS(x2 + y2 + z2))
+	int16_t z_value; /*!<x-axis is 10 to 13 bits. */
+	float teta_x; // 3 axix calculation : x poxition
+	float psi_y;  // 3 axix calculation : y poxition
+	float phi_z;  // 3 axix calculation : z poxition
 }
 ADXL345_sensor;
+/* =========================================================================*/
 
- /*============================ API ========================================*/
-/**
+/* ============================ API ========================================*/
+/*!
  * @brief API to interact with the ADXL345 accelerometer
  *
  */
-/**
+/*!
 * @brief caculate the angle on one axis : Typically to check horizontality, motionless.
-*			   To notice :
+*			   @note To notice :
 *					 - the calculated angle of inclination is accurate only when the
 *         device is oriented such that the x-axis is always in the plane of gravity
 *				   - Linear approximation for inclination angle between -30 and +30° is possible with
@@ -188,41 +183,40 @@ ADXL345_sensor;
 * 			   - No ability to distinguish angles of inclination in a complete 360° arc
  */
 void inclination_calculation_1axis(void);
-/**
+/*!
 * @brief caculate the angle on two axis : Typically to move a robot, at constant speed) on a plane surface
- * x, y >0	: 0<teta<90 - x>0, y<0 : 90<teta<180 - x, y <0	: 180<teta<270 - x<0, y>0	: 270<teta<360
- *			   To notice :
- * 				  - An effective incremental sensitivity that is roughly constant.
- *					- Complete 360° Tilt Sensing
+* 			 x, y >0	: 0<teta<90 - x>0, y<0 : 90<teta<180 - x, y <0	: 180<teta<270 - x<0, y>0	: 270<teta<360
+* @note An effective incremental sensitivity that is roughly constant.
+ *			Complete 360° Tilt Sensing.
  */
 void inclination_calculation_2axis(void);
-/**
+/*!
 * @brief caculate the angle on three axis : Typically to move a robot on all directions (at constant speed)
  *
  */
 void inclination_calculation_3axis(void);
-/**
+/*!
 * @brief set offset according the precision from +-2g to +-16g
  *
  */
 void setOffset(ADXL345_sensor sensor, int8_t offset, three_axis axis);
-/**
+/*!
 	* @brief set rsolution
   *
  */
 void set_resolution(ADXL345_sensor *sensor, resolution resol);
-/**
+/*!
 	* @brief get rsolution
   *
  */
 resolution get_resolution(ADXL345_sensor *sensor);
-/**
+/*!
 * @brief set range from +-2g to +-16g
  *
  */
 void setRange(range_t range);
-/**
-* @brief Get range (give true value only if  setrange have been used before calling)
+/*!
+ * @brief Get range (give true value only if  setrange have been used before calling)
  *
  */
 range_t getRange(ADXL345_sensor *ps);
@@ -231,22 +225,26 @@ void setDataRate(dataRate_t dataRate);
 
 dataRate_t getDataRate(void);
 
-// bool getEvent(sensors_event_t *);
-
-// void getSensor(sensor_t *);
-
 ADXL345_StatusTypeDef ADXL345_begin(ADXL345_sensor *my_sensor, range_t my_range);
-
-void  getDeviceID(ADXL345_sensor *pa);
-
-//  int16_t read16(uint8_t reg);
-
-//  int16_t getX(void), getY(void), getZ(void);
-
-#endif // STM32Lxx_ADXL345_h
-/**
-* @brief Get X, Y, Z
+/*!
+ * @brief Get X, Y, Z
  *
  */
-void Accel_LectureXYZ (ADXL345_sensor *sensor);
+void accel_lectureXYZ (ADXL345_sensor *sensor);
+/**
+ * @brief Calculation in a sphere of angle with X axis
+ * @param sensor
+ */
+void  accel_pitch (ADXL345_sensor *sensor);
+/**
+ * @brief Calculation in a sphere of angle with Y axis
+ * @param sensor
+ */
+void  accel_roll (ADXL345_sensor *sensor);
+/**
+ * @brief Calculation in a sphere of angle with Z axis
+ * @param sensor
+ */
+void  accel_yaw (ADXL345_sensor *sensor);
 
+#endif // STM32Lxx_ADXL345_h
