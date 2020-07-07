@@ -1,73 +1,21 @@
-/**************************************************************************/
 /*!
-  *  @file     ADXL345_File.c
-  *  @author   Lucien
+  *  @file		ADXL345_File.c
+  *  @author	Lucien
+	*  @brief		Using an Accelerometer for Inclination Sensing (AN-1057)
+	*						Notice : 10bits for +-2g range gives +-126LSB for +-1g
 */
-/**************************************************************************/
 
 #include "ADXL345_Header.h"
-#include <string.h>
+#include <string.h> // memset function comes from this library
 #include "usart.h"
+#include "math.h"
 
-/**************************************************************************/
-/*!
-    @brief  Reads the device ID (can be used to check connection)
-    @return The Device ID of the connected sensor
-*/
-/**************************************************************************/
-void getDeviceID(ADXL345_sensor *pa){
-//	uint8_t * pdevid;
-//	pdevid = &Dev_ID_Address;// Envoyer l'adresse de registre
-//	HAL_I2C_Master_Transmit(&hi2c3,chip_id,pdevid,1,10);
-//	HAL_I2C_Master_Receive(&hi2c3,chip_id,&pa->dev_Id,1,10);
+const double conv_rad_deg = 360.0/2.0/3.14159; // convert radian to degree
 
-}
-
-/**************************************************************************/
-/*!
-    @brief  Gets the most recent X axis value
-    @return The raw `int16_t` unscaled x-axis acceleration value
-*/
-/**************************************************************************/
-//int16_t getX(void) {
-//  return read16(ADXL345_REG_DATAX0);
-//}
-
-/**************************************************************************/
-/*!
-    @brief  Gets the most recent Y axis value
-    @return The raw `int16_t` unscaled y-axis acceleration value
-*/
-/**************************************************************************/
-//int16_t getY(void) {
-//  return read16(ADXL345_REG_DATAY0);
-//}
-
-/**************************************************************************/
-/*!
-    @brief  Gets the most recent Z axis value
-    @return The raw `int16_t` unscaled z-axis acceleration value
-*/
-/**************************************************************************/
-//int16_t getZ(void) {
-//  return read16(ADXL345_REG_DATAZ0);
-//}
-
-/**************************************************************************/
-/*!
-  * @brief  Setups the HW (reads coefficients values, etc.)
-  * @param  address:register address,  val:value to write in register
-  * @return 
-*/
-/**************************************************************************/
-void AccellerometreConfigure (ADXL345_sensor *sensor, int8_t address, int8_t val){
-  // Commencer la transmission à trois axes accéléromètre
-	sensor->write_device(ADXL345_ADDRESS, address, val);
-}
 /**
  * @brief Feed an `ADXL345_sensor` struct with sensor features
  *
- * @param sensor Pointer to a `ADXL345_sensor` struct to feed
+ * @param Pointer to sensor `ADXL345_sensor` struct
  */
 void init_Sensor(ADXL345_sensor *sensor) {
 	// store members set up by user, if so!
@@ -89,11 +37,7 @@ void init_Sensor(ADXL345_sensor *sensor) {
 	sensor->ms_delay = pdelay	;
 	// get ID device
 	sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_DEVID, &sensor->dev_id,1);
-	sensor->full_res = 0; // default not full resolution
-//  sensor->min_delay = 0;
-//  sensor->max_value = -156.9064F; /* -16g = 156.9064 m/s^2  */
-//  sensor->min_value = 156.9064F;  /*  16g = 156.9064 m/s^2  */
-//  sensor->resolution = 0.03923F;  /*  4mg = 0.0392266 m/s^2 */
+	sensor->full_res = DEFAULT; // default not full resolution
 }
 /**************************************************************************/
 /*!
@@ -147,28 +91,49 @@ void set_resolution(ADXL345_sensor *sensor, resolution resol){
 resolution get_resolution(ADXL345_sensor *sensor){
 	
 	return sensor->full_res;
-};
-
+}
+/**
+	* @brief set offset according to actual resolution
+  * @param sensor Pointer, offset value, axis to set up
+  *				 Offset value is the average value of a mesurement sample	  
+ */
 void setOffset(ADXL345_sensor sensor, int8_t offset, three_axis axis){
 	uint8_t read_range = sensor.dev_range;
 	if (sensor.full_res != 1){ // not full resolution ?
 		// the range bits determine the maximum g range and scale factor if FULL_RES bit is set to 0
+		// 7.9mg/LSB
+
+	}
+	else {
+		// 3.9mg/LSB
 		switch (read_range){
 			case 0 : // +/- 2g
-				
+
 			break;
 			case 1 : // +/- 4g
-				
+			
 			break;
 			case 2 : // +/- 8g
 				
 			break;
 			case 3 : // +/- 16g
-				
+
 			break;		
 		}
 	}
-};
+			switch (axis){
+			case X_AXIS :
+				sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSX, -offset);
+			break;
+			case Y_AXIS :
+				sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSY, -offset);
+			break;
+			case Z_AXIS :
+				sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSZ, -offset);
+			break;
+	
+		}
+	}
 /**************************************************************************/
 /*!
     @brief  Sets the g range for the accelerometer
@@ -227,51 +192,62 @@ dataRate_t getDataRate(void) {
 //  return (dataRate_t)(readRegister(ADXL345_REG_BW_RATE) & 0x0F);
 	return ADXL345_DATARATE_3200_HZ; // A RETIRER	
 }
-
-/**************************************************************************/
-/*!
-    @brief  Gets the most recent sensor event
-    @param event Pointer to the event object to fill
-    @return true: success
-*/
-/**************************************************************************/
-//ADXL345_StatusTypeDef getEvent(sensors_event_t *event) {
-//  /* Clear the event */
-//  memset(event, 0, sizeof(sensors_event_t));
-
-//  event->version = sizeof(sensors_event_t);
-//  event->sensor_id = _sensorID;
-//  event->type = SENSOR_TYPE_ACCELEROMETER;
-//  event->timestamp = 0;
-//  event->acceleration.x =
-//      getX() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-//  event->acceleration.y =
-//      getY() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-//  event->acceleration.z =
-//      getZ() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-
-//  return ADXL345_OK;
-//}
 /**
-* @brief Get X, Y, Z
- *
+ * @brief Get X, Y, Z
+ * @param Pointer of type ADXL345_sensor to the device
  */
-void  Accel_LectureXYZ (ADXL345_sensor *sensor){
+void  accel_lectureXYZ (ADXL345_sensor *sensor){
 	uint8_t data[6];
 	
 	sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_DATAX0, data,6);
 	// Résolution is 10 bits, i.e. 2 bytes. LSB first
   // X, Y, Z are cast in 4 bytes with sign
 	if (data[1] & 0x02) // check if <0 number
-		sensor->x_value = ((0xFF << 24) | (0xFF << 16) | ((data[1]) << 8) | data[2]);
+		sensor->x_value = (((data[1]) << 8) | data[2]);
   else
 		sensor->x_value = (((int)data[1]) << 8) | data[0];
 	if (data[3] & 0x02)
-		sensor->y_value = ((0xFF << 24) | (0xFF << 16) | ((data[3]) << 8) | data[2]);		
+		sensor->y_value = (((data[3]) << 8) | data[2]);		
   else
 		sensor->y_value = (((int)data[3]) << 8) | data[2];
 	if (data[5] & 0x02)
-		sensor->z_value = ((0xFF << 24) | (0xFF << 16) | ((data[5]) << 8) | data[4]);		
+		sensor->z_value = (((data[5]) << 8) | data[4]);		
   else
 		sensor->z_value = (((int)data[5]) << 8) | data[4];
+}
+/**
+ * @brief Calculation in a sphere of X angle with with the horizon as a reference
+ *				Determine the angle individually for each axis of the accelerometer from a reference
+ *				position. The effective incremental sensitivity is constant and the angles can be accurately
+ *				measured for all points around the unit sphere.
+ * @param sensor
+ */
+void  accel_pitch (ADXL345_sensor *sensor){
+	float denominateurX;
+	denominateurX = pow(sensor->y_value/126.0,2) + pow(sensor->z_value/126.0,2);
+	sensor->teta_x = atan(sensor->x_value/126.0/sqrt(denominateurX))*conv_rad_deg;
+}
+/**
+ * @brief Calculation in a sphere of X angle with the horizon as a reference
+ *				Determine the angle individually for each axis of the accelerometer from a reference
+ *				position. The effective incremental sensitivity is constant and the angles can be accurately
+ *				measured for all points around the unit sphere.
+ * @param sensor
+ */
+void  accel_roll (ADXL345_sensor *sensor){
+	float denominateurY;
+	denominateurY = pow(sensor->x_value/126.0,2) + pow(sensor->z_value/126.0,2);
+	sensor->psi_y = atan(sensor->y_value/126.0/sqrt(denominateurY))*conv_rad_deg;
+}
+/**
+ * @brief Calculation in a sphere of Z angle with the horizon as a reference
+ *				Determine the angle individually for each axis of the accelerometer from a reference
+ *				position. The effective incremental sensitivity is constant and the angles can be accurately
+ *				measured for all points around the unit sphere.
+ * @param sensor
+ */
+void  accel_yaw (ADXL345_sensor *sensor){
+	float numerateurZ;
+	numerateurZ = pow(sensor->x_value/126.0,2) + pow(sensor->y_value/126.0,2);
+	sensor->phi_z = atan((sqrt(numerateurZ)/(sensor->z_value/126.0)))*conv_rad_deg;
 }
