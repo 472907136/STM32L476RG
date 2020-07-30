@@ -38,6 +38,7 @@ void init_Sensor(ADXL345_sensor *sensor) {
 	// get ID device
 	sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_DEVID, &sensor->dev_id,1);
 	sensor->full_res = DEFAULT; // default not full resolution
+  sensor->data_rate = ADXL345_DATARATE_100_HZ; // default value
 }
 /**************************************************************************/
 /*!
@@ -69,8 +70,8 @@ ADXL345_StatusTypeDef ADXL345_begin(ADXL345_sensor *my_sensor, range_t my_range)
 void set_resolution(ADXL345_sensor *sensor, resolution resol){
 	uint8_t value; // value to write in bit D3 DATA_FORMAT register
 	uint8_t data_format_value; // register value
-	if (resol != sensor->full_res){
-		sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, &data_format_value,1);
+
+		sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, &data_format_value, 1);
 		if (resol == FULL){
 			value = 0x08; // D3 = 1 in DATA_FORMAT register
 			data_format_value |= value;
@@ -80,8 +81,7 @@ void set_resolution(ADXL345_sensor *sensor, resolution resol){
 			data_format_value &= value;
 		}
 		sensor->write_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, data_format_value);
-		sensor->full_res = resol;			
-	}
+ 		sensor->full_res = resol;
 }
 /**
 	* @brief get rsolution
@@ -93,69 +93,57 @@ resolution get_resolution(ADXL345_sensor *sensor){
 	return sensor->full_res;
 }
 /**
+	* @brief tilt on one axis
+  * @param sensor Pointer, offset value, axis to set up
+  *				 Offset value is the average value of a mesurement sample	  
+ */
+float inclination_calculation_1axis(ADXL345_sensor *sensor,three_axis axis){
+	// here we need to take care of the resolution : TO DO (cf. 256.0)
+	if (axis == X_AXIS)
+		return asin(sensor->x_value/256.0)*conv_rad_deg;
+	if (axis == Y_AXIS)
+		return acos(sensor->y_value/256.0)*conv_rad_deg;
+	if (axis == Z_AXIS)
+		return acos(sensor->z_value/256.0)*conv_rad_deg;
+
+	return 0.0;
+};
+/**
 	* @brief set offset according to actual resolution
   * @param sensor Pointer, offset value, axis to set up
   *				 Offset value is the average value of a mesurement sample	  
  */
-void setOffset(ADXL345_sensor sensor, int8_t offset, three_axis axis){
-	uint8_t read_range = sensor.dev_range;
-	if (sensor.full_res != 1){ // not full resolution ?
-		// the range bits determine the maximum g range and scale factor if FULL_RES bit is set to 0
-		// 7.9mg/LSB
+void setOffset(ADXL345_sensor sensor, int8_t average_value, three_axis axis){
 
-	}
-	else {
-		// 3.9mg/LSB
-		switch (read_range){
-			case 0 : // +/- 2g
-
-			break;
-			case 1 : // +/- 4g
-			
-			break;
-			case 2 : // +/- 8g
-				
-			break;
-			case 3 : // +/- 16g
-
-			break;		
-		}
-	}
-			switch (axis){
-			case X_AXIS :
-				sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSX, -offset);
-			break;
-			case Y_AXIS :
-				sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSY, -offset);
-			break;
-			case Z_AXIS :
-				sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSZ, -offset);
-			break;
-	
-		}
+	average_value /= -4;
+	switch (axis){
+	case X_AXIS :
+		sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSX, (uint8_t)average_value);
+	break;
+	case Y_AXIS :
+		sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSY, (uint8_t)average_value);
+	break;
+	case Z_AXIS :
+		sensor.write_device(ADXL345_ADDRESS, ADXL345_REG_OFSZ, (uint8_t)average_value);
+	break;
+}
 	}
 /**************************************************************************/
 /*!
-    @brief  Sets the g range for the accelerometer
+    @brief Sets the g range for the accelerometer
     @param range The new `range_t` to set the accelerometer to
 */
 /**************************************************************************/
-void setRange(range_t range) {
+void set_range(ADXL345_sensor *sensor, range_t range) {
   /* Read the data format register to preserve bits */
-//  uint8_t format = readRegister(ADXL345_REG_DATA_FORMAT);
-
-//  /* Update the data rate */
-//  format &= ~0x0F;
-//  format |= range;
-
-//  /* Make sure that the FULL-RES bit is enabled for range scaling */
-//  format |= 0x08;
-
-//  /* Write the register back to the IC */
-//  writeRegister(ADXL345_REG_DATA_FORMAT, format);
-
-//  /* Keep track of the current range (to avoid readbacks) */
-//  _range = range;
+  uint8_t format;
+  sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, &format, 1);
+  /* Update the data rate */
+  format &= 0xFC;  // D0, D1 are cleared
+  format |= range; // DO, D1 are set up
+  /* Write the register back to the IC */
+  sensor->write_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, format);
+	sensor->dev_range = range;
 }
 
 /**************************************************************************/
@@ -165,7 +153,7 @@ void setRange(range_t range) {
     @return The current `range_t` value
 */
 /**************************************************************************/
-range_t getRange(ADXL345_sensor *ps) {
+range_t get_range(ADXL345_sensor *ps) {
 
 	return ps->dev_range;
 }
@@ -176,7 +164,7 @@ range_t getRange(ADXL345_sensor *ps) {
     @param dataRate The `dataRate_t` to set
 */
 /**************************************************************************/
-void setDataRate(dataRate_t dataRate) {
+void set_data_rate(dataRate_t dataRate) {
   /* Note: The LOW_POWER bits are currently ignored and we always keep
      the device in 'normal' mode */
 //  writeRegister(ADXL345_REG_BW_RATE, dataRate);
@@ -188,9 +176,27 @@ void setDataRate(dataRate_t dataRate) {
     @return The current data rate
 */
 /**************************************************************************/
-dataRate_t getDataRate(void) {
+dataRate_t get_data_rate(void) {
 //  return (dataRate_t)(readRegister(ADXL345_REG_BW_RATE) & 0x0F);
 	return ADXL345_DATARATE_3200_HZ; // A RETIRER	
+}
+/**************************************************************************/
+/*!
+    @brief  Gets the data rate for the ADXL345 (controls power consumption)
+    @return The current data rate
+*/
+/**************************************************************************/
+void self_test(ADXL345_sensor *ps, selftest value){
+  uint8_t reg_value;
+
+  ps->read_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, &reg_value, 1);
+  if (value == ON){
+    reg_value |= 0x80; // D7 = 1
+    ps->write_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, reg_value);
+  }
+  else
+    reg_value &= 0x7F; // D7 = 0
+    ps->write_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, reg_value);
 }
 /**
  * @brief Get X, Y, Z
@@ -198,7 +204,7 @@ dataRate_t getDataRate(void) {
  */
 void  accel_lectureXYZ (ADXL345_sensor *sensor){
 	uint8_t data[6];
-	
+  
 	sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_DATAX0, data,6);
 	// Résolution is 10 bits, i.e. 2 bytes. LSB first
   // X, Y, Z are cast in 4 bytes with sign
@@ -250,4 +256,18 @@ void  accel_yaw (ADXL345_sensor *sensor){
 	float numerateurZ;
 	numerateurZ = pow(sensor->x_value/126.0,2) + pow(sensor->y_value/126.0,2);
 	sensor->phi_z = atan((sqrt(numerateurZ)/(sensor->z_value/126.0)))*conv_rad_deg;
+}
+/**
+ * @brief Write the register
+ * @param sensor, value to write in register
+ */
+void  start_mesurement (ADXL345_sensor *sensor){
+  /* Read the data from register */
+  uint8_t reg_value;
+  sensor->read_device(ADXL345_ADDRESS, ADXL345_REG_POWER_CTL, &reg_value, 1);
+  /* Update the Measure Bit D3 */
+  reg_value &= 0xF7;  // D3 is cleared
+  reg_value |= 0x08;  // D3 is set
+  /* Write the register back to the IC */
+  sensor->write_device(ADXL345_ADDRESS, ADXL345_REG_POWER_CTL, reg_value);
 }
