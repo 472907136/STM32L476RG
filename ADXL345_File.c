@@ -186,7 +186,7 @@ dataRate_t get_data_rate(void) {
     @return The current data rate
 */
 /**************************************************************************/
-void self_test(ADXL345_sensor *ps, selftest value){
+void init_self_test(ADXL345_sensor *ps, selftest value){
   uint8_t reg_value;
 
   ps->read_device(ADXL345_ADDRESS, ADXL345_REG_DATA_FORMAT, &reg_value, 1);
