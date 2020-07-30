@@ -284,10 +284,10 @@ void ADXL345SelfTest(ADXL345_sensor *sensor) {
   // defaultdata_rate(ADXL345_DATARATE_100_HZ) is ok
   //AN-1077 p22 the part must be in normal power operation (LOW_POWER bit = 0 in BW_RATE register, Address 0x2C)
   ADXL345GetAvgN(&avg_x, &avg_y, &avg_z, 100);
-  self_test(sensor, ON); // now activate self-test
+  init_self_test(sensor, ON); // now activate self-test
   HAL_Delay(2); // wait 1.1ms
   ADXL345GetAvgN(&avg_stx, &avg_sty, &avg_stz, 100);
-  self_test(sensor, OFF); // now desactivate self-test
+  init_self_test(sensor, OFF); // now desactivate self-test
 
   // 3V3 error limit scale factors.
   #define scale_factor_xy  1.77
