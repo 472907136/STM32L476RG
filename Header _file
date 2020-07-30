@@ -231,7 +231,9 @@ void set_data_rate(dataRate_t dataRate);
 
 dataRate_t get_data_rate(void);
 
-void self_test(ADXL345_sensor *ps, selftest value);
+void init_self_test(ADXL345_sensor *ps, selftest value);
+
+void ADXL345GetAvgN(int16_t *xi,int16_t *yi,int16_t *zi,uint8_t n);
 
 ADXL345_StatusTypeDef ADXL345_begin(ADXL345_sensor *my_sensor, range_t my_range);
 /*!
